@@ -1,4 +1,4 @@
-#include "HttpResponse.hpp"
+#include "httpResponse.hpp"
 #include <cstdlib>
 
 HttpResponse::HttpResponse() {
@@ -11,46 +11,72 @@ HttpResponse::HttpResponse() {
 }
 
 void    HttpResponse::response(HttpRequest httpRequest, int clientFd) {
-    _clientFd = clientFd;
-    _rootPath = std::getenv("PWD"); //PAS C++98 et need to changer en fonction du serv loc
-    _defaultPathError = "html/error400.html";
-    
-    // std::string root_path = __FILE__;
-    // size_t pos = root_path.find_last_of("/\\");
-    // if (pos != std::string::npos) {
-    //     root_path = root_path.substr(0, pos);
-    // }
+    setInformation(httpRequest, clientFd);
 
+    //verif method ad location
+    if (_method == "GET")
+        getMethod();
+    else if (_method == "POST")
+        postMethod();
+    else if (_method == "DELETE") {}
+    else
+        sendResponse(405, _defaultPathError);
+}
+
+void    HttpResponse::setInformation(HttpRequest httpRequest, int clientFd) {
+    _defaultMainPage = "index.html";
+    _clientFd = clientFd;
+    _root = "/html";
+    _rootPath = std::getenv("PWD"); //PAS C++98 et need to changer en fonction du serv loc
+    _defaultPathError = "/error.html";
     _method = httpRequest.getMethod();
     _path = httpRequest.getPath();
     _version = httpRequest.getVersion();
-    std::cout << _path << std::endl;
-    if (_method == "GET")
-        getMethod();
-    else if (_method == "POST") {}
-    else if (_method == "DELETE") {}
 }
 
 void    HttpResponse::getMethod() {
     std::cout << "Get Method" << std::endl;
     //default loc; si vide;
-    try {
-        std::ifstream fd(_rootPath + _path); //PQQQQ
-        if (!fd)
-            sendResponse(404, _defaultPathError);
-        std::string page((std::istreambuf_iterator<char>(fd)), std::istreambuf_iterator<char>());
-        sendResponse(200, page);
+
+
+    std::cout << "PATH ::::     " << _path << std::endl;
+
+
+    if (_path == "/") {
+        _path = "/index.html";
+        sendResponse(200, _path);
     }
-    catch (const std::ios_base::failure & fail) {
-        std::cerr << fail.what() << std::endl; //a enlever
-        sendResponse(400, _defaultPathError);
+    else {
+        try {
+            std::ifstream fd(_rootPath + _root +_path);
+            if (fd) {
+                sendResponse(200, _path);
+            }
+            else {
+                sendResponse(404, _defaultPathError);
+            }
+        }
+        catch (const std::ios_base::failure & fail) {
+            std::cerr << fail.what() << std::endl; //a enlever
+            sendResponse(400, _defaultPathError);
+        }
     }
 }
 
-void HttpResponse::sendResponse(int nb, std::string page) {
+void    HttpResponse::postMethod() {}
+
+void HttpResponse::sendResponse(int nb, std::string path) {
+    std::ifstream fd(_rootPath + _root + path);
+    std::cout << _rootPath + _root +path << std::endl;
+
+
+
+    std::string page((std::istreambuf_iterator<char>(fd)),std::istreambuf_iterator<char>());
     std::string res = _version + " " + std::to_string(nb)+ " " +_responseStatus.find(nb)->second + "\r\n";
-    res = res + "Content-type: text/html" + "\r\n\r\n";//a verif le type de docu + pt rajouter content-length
+    res = res + "Content-type: text/html" + "\r\n";//a verif le type de docu
+    res = res + "Content-length:" + std::to_string((res + page).size()) + "\r\n\r\n";
     res = res + page + "\r\n";
+    std::cout << res << std::endl;
     send(_clientFd, res.c_str(), res.size(), 0);
 }
 

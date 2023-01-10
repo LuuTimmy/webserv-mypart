@@ -30,13 +30,25 @@ class HttpResponse {
         std::string _path;
         std::string _version;
 
+        std::string _root;
         std::string _rootPath;
         std::string _defaultPathError;
+        std::string _defaultMainPage;
     public:
         HttpResponse();
+        void    setInformation(HttpRequest httpRequest, int clientFd);
         void    response(HttpRequest httpRequest, int clientFd);
         void    getMethod();
+        void    postMethod();
         void    sendResponse(int nb, std::string page);
+};
+
+class location {
+    std::string _path;
+
+    std::vector<std::string> _allow_method;
+    std::string _root;
+    std::string _index;
 };
 
 #endif 

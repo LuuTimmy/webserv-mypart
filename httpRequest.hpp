@@ -29,9 +29,6 @@ class HttpRequest {
         HttpRequest();
         std::string copy_until(const std::string & str, char c);
         void readRequest(std::string & request);
-        // void verifMethod();
-        // void verifPath();
-        // void verifVersion();
 
         std::string getMethod();
         std::string getPath();

@@ -9,22 +9,40 @@
 #include "httpRequest.hpp"
 #include "httpResponse.hpp"
 
-#define PORT 8080
+#define PORT 56
 #define BUFFER_SIZE 1024
+
+int socketclose;
+
+void    sig_handler(int signal) {
+    (void)signal;
+    std::cout << "SIGNAL SIGINT" << std::endl;
+    close(socketclose);
+    exit(0);
+}
+
 
 int main() {
     char buffer[BUFFER_SIZE];
-    char resp[] = "HTTP/1.0 200 OK\r\n"
+    char resp[] = "HTTP/1.1 200 OK\r\n"
                   "Server: webserver-c\r\n"
                   "Content-type: text/html\r\n\r\n"
                   "<html>hello, world</html>\r\n";
 
     // Create a socket
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    socketclose = sockfd;
     if (sockfd == -1) {
         perror("webserver (socket)");
         return 1;
     }
+    // fcntl(sockfd, F_SETFL, O_NONBLOCK);
+    // int value = 1;
+    // if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(value)) == -1)
+    // {
+    //     perror("setsockopt :");
+    //     exit(-1);
+    // }
 
     // Create the address to bind the socket to
     struct sockaddr_in host_addr;
@@ -46,6 +64,7 @@ int main() {
         perror("webserver (listen)");
         return 1;
     }
+    signal(SIGINT, sig_handler);
     std::cout << "server open" << std::endl;
     for (;;) {
         int newsockfd = accept(sockfd, (struct sockaddr *)&host_addr,
@@ -81,13 +100,6 @@ int main() {
         sscanf(buffer, "%s %s %s", method, uri, version);
         printf("[%s:%u] %s %s %s\n", inet_ntoa(client_addr.sin_addr),
                ntohs(client_addr.sin_port), method, version, uri);
-
-        // int valwrite = write(newsockfd, resp, strlen(resp));
-        // if (valwrite < 0) {
-        //     perror("webserver (write)");
-        //     continue;
-        // }
-
         close(newsockfd);
     }
 
