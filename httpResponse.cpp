@@ -10,28 +10,62 @@ HttpResponse::HttpResponse() {
     _responseStatus.insert(std::pair<int, std::string>(505, "Version Not Supported"));
 }
 
-void    HttpResponse::response(HttpRequest httpRequest, int clientFd) {
-    setInformation(httpRequest, clientFd);
+void    HttpResponse::response(HttpRequest httpRequest, int clientFd, TestServ serv) {
+    setInformation(httpRequest, clientFd, serv);
 
     //verif method ad location
-    if (_method == "GET")
+    if (_methodRequest == "GET")
         getMethod();
-    else if (_method == "POST")
+    else if (_methodRequest == "POST")
         postMethod();
-    else if (_method == "DELETE") {}
+    else if (_methodRequest == "DELETE") {}
     else
         sendResponse(405, _defaultPathError);
 }
 
-void    HttpResponse::setInformation(HttpRequest httpRequest, int clientFd) {
-    _defaultMainPage = "index.html";
+void    HttpResponse::setInformation(HttpRequest httpRequest, int clientFd, TestServ serv) {
+    _methodRequest = httpRequest.getMethod();
     _clientFd = clientFd;
-    _root = "/html";
-    _rootPath = std::getenv("PWD"); //PAS C++98 et need to changer en fonction du serv loc
-    _defaultPathError = "/error.html";
-    _method = httpRequest.getMethod();
-    _path = httpRequest.getPath();
     _version = httpRequest.getVersion();
+    _rootPath = std::getenv("PWD"); //egegzgezgzggeegegg
+    _defaultPathError = serv.getErrorPage();
+
+    _allowedMethod = serv.getMethod();
+    _root = serv.getRoot();
+
+    int pos; //A TOUT VERIF
+    if ((pos = verifLocation(httpRequest.getPath(), serv.getLocation())) >= 0) {
+        Location* loc = serv.getLocation()[pos];
+
+        _path = httpRequest.getPath().substr(loc->getPath().size(), httpRequest.getPath().size());
+        _index = loc->getIndex(); //oblifer d'avoir ? 
+        _root = loc->getRoot(); //oblige d'avoir
+        _allowedMethod = loc->getMethod();
+
+        _dirListing = loc->getDirListing();
+        _redir = loc->getRedir();
+    }
+    std::cout << "index:  " << _index << std::endl; 
+    std::cout << "path:  " << _path << std::endl; 
+
+    if (_index.empty())
+        _index = serv.getIndex();
+    if (_path.empty())
+        _path = _index;
+        //need to clear;
+    
+}
+
+int HttpResponse::verifLocation(std::string path, std::vector<Location *> locs) {
+    if (locs.size() <= 0)
+        return (-1);
+    if (path.find("/", 1) != std::string::npos)
+        path = path.substr(0, path.find("/", 1));
+    for (int i = 0; i < locs.size(); i++) {
+        if (path == locs[i]->getPath())
+            return (i);
+    }
+    return (-1);
 }
 
 void    HttpResponse::getMethod() {
@@ -43,7 +77,7 @@ void    HttpResponse::getMethod() {
 
 
     if (_path == "/") {
-        _path = "/index.html";
+        _path = _index;
         sendResponse(200, _path);
     }
     else {
@@ -66,10 +100,11 @@ void    HttpResponse::getMethod() {
 void    HttpResponse::postMethod() {}
 
 void HttpResponse::sendResponse(int nb, std::string path) {
+    if (nb >= 400)
+        _root = "/";
+
     std::ifstream fd(_rootPath + _root + path);
-    std::cout << _rootPath + _root +path << std::endl;
-
-
+    std::cout << _rootPath + _root + path << std::endl;
 
     std::string page((std::istreambuf_iterator<char>(fd)),std::istreambuf_iterator<char>());
     std::string res = _version + " " + std::to_string(nb)+ " " +_responseStatus.find(nb)->second + "\r\n";

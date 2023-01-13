@@ -19,36 +19,38 @@
 #include <filesystem>
 #include <fstream>
 #include <streambuf>
+#include <vector>
 
 #include "httpRequest.hpp"
+#include "testServ.hpp"
 
 class HttpResponse {
         std::map<int, std::string> _responseStatus; 
 
+        //request
         int _clientFd;
-        std::string _method;
-        std::string _path;
+        std::string _methodRequest;
         std::string _version;
-
-        std::string _root;
         std::string _rootPath;
+
+        //serv
+        std::string _path;
+        std::string _root;
+        std::vector<std::string> _allowedMethod;
         std::string _defaultPathError;
-        std::string _defaultMainPage;
+        std::string _index;
+        std::string _dirListing;
+        std::string _redir;
+
+        TestServ _serv;
     public:
         HttpResponse();
-        void    setInformation(HttpRequest httpRequest, int clientFd);
-        void    response(HttpRequest httpRequest, int clientFd);
+        void    setInformation(HttpRequest httpRequest, int clientFd, TestServ serv);
+        void    response(HttpRequest httpRequest, int clientFd, TestServ serv);
+        int     verifLocation(std::string path, std::vector<Location *> locs);
         void    getMethod();
         void    postMethod();
         void    sendResponse(int nb, std::string page);
-};
-
-class location {
-    std::string _path;
-
-    std::vector<std::string> _allow_method;
-    std::string _root;
-    std::string _index;
 };
 
 #endif 
