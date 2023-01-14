@@ -27,18 +27,18 @@ class Location{
         std::string                 _root;
         std::string                 _index;
         std::vector<std::string>    _method;
-        std::string                 _dirListing;
+        bool                        _dirListing;
         std::string                 _redir;
         //std::string new loc ? 
     public:
-        Location(std::string path, std::string root, std::string index, std::vector<std::string> method, std::string dir, std::string redir);
+        Location(std::string path, std::string root, std::string index, std::vector<std::string> method, bool dir, std::string redir);
         ~Location();
 
         std::string getPath() { return (_path); };
         std::string getRoot() { return (_root); };
         std::string getIndex() { return (_index); };
         std::vector<std::string> getMethod() { return (_method); };
-        std::string getDirListing() { return (_dirListing); };
+        bool        getDirListing() { return (_dirListing); };
         std::string getRedir() { return (_redir); };
         
 };

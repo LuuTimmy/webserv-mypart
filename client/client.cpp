@@ -3,13 +3,13 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#define PORT 8080
+#define PORT 8001
  
 int main(int argc, char const* argv[])
 {
     int sock = 0, valread, client_fd;
     struct sockaddr_in serv_addr;
-    char hello[] =  "GEeeT /html/test.html HTTP/1.1\r\n"
+    char hello[] =  "DELETE /dirlisting/trucadelete HTTP/1.1\r\n"
                     "Host: www.example.com\r\n"
                     "User-Agent: MyBrowser/1.0\r\n\r\n";
 
@@ -36,7 +36,6 @@ int main(int argc, char const* argv[])
         return -1;
     }
     send(sock, hello, strlen(hello), 0);
-    printf("Hello message sent\n");
     valread = read(sock, buffer, 1024);
     printf("%s\n", buffer);
  

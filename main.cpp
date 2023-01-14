@@ -15,6 +15,8 @@
 int socketclose;
 
 int main() {
+    std::vector<std::string> plop;
+
     char buffer[BUFFER_SIZE];
     char resp[] = "HTTP/1.1 200 OK\r\n"
                   "Server: webserver-c\r\n"

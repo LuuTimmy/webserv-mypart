@@ -21,6 +21,8 @@
 #include <streambuf>
 #include <vector>
 
+#include <dirent.h>
+
 #include "httpRequest.hpp"
 #include "testServ.hpp"
 
@@ -39,7 +41,7 @@ class HttpResponse {
         std::vector<std::string> _allowedMethod;
         std::string _defaultPathError;
         std::string _index;
-        std::string _dirListing;
+        bool        _dirListing;
         std::string _redir;
 
         TestServ _serv;
@@ -48,9 +50,16 @@ class HttpResponse {
         void    setInformation(HttpRequest httpRequest, int clientFd, TestServ serv);
         void    response(HttpRequest httpRequest, int clientFd, TestServ serv);
         int     verifLocation(std::string path, std::vector<Location *> locs);
+        
+        void    toRedir();
+        void    toDirListing();
         void    getMethod();
         void    postMethod();
+        void    deleteMethod();
+        
+        std::string getContentType(std::string path);
         void    sendResponse(int nb, std::string page);
+
 };
 
 #endif 
